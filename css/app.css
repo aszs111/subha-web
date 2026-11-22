@@ -159,3 +159,7 @@ textarea.field { min-height: 80px; resize: vertical; }
 #tips .tipcard .bd { font-size: 20px; line-height: 1.5; white-space: pre-line; margin: 6px 0; }
 #tips .tipcard .ac { display: flex; align-items: center; gap: 4px; }
 #tips .never { position: absolute; left: 50%; transform: translateX(-50%); border: 1px solid rgba(247,239,218,.5); border-radius: 22px; padding: 9px 20px; font-size: 20px; white-space: nowrap; background: rgba(0,0,0,.3); }
+
+/* إخفاء أشرطة التمرير */
+.page, .gallery, .chips { scrollbar-width: none; }
+.page::-webkit-scrollbar, .gallery::-webkit-scrollbar, .chips::-webkit-scrollbar { display: none; }
