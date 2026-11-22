@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#040404">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="سُبحة">
+  <meta name="description" content="سُبحة: مسبحة للذكر بخرز واقعي، يسقط بتمرير الإصبع أو بالنقر أو بالصوت">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/app.css">
+  <title>سُبحة</title>
+</head>
+<body>
+<div id="app" class="bg-black">
+
+  <!-- الشاشة الرئيسية -->
+  <main id="main">
+    <canvas id="strand" data-tip="strand" aria-label="الخرزات"></canvas>
+    <section id="panel">
+      <div class="spacer" style="flex:0.7"></div>
+      <div id="dhikrBox" data-tip="dhikr" role="button" aria-label="الأذكار">
+        <div id="dhikrText"></div>
+        <div id="dhikrHint">الأذكار <svg viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg></div>
+      </div>
+      <div id="count" data-tip="count">٠</div>
+      <div id="of"></div>
+      <div id="diamonds"><i></i><i></i><i></i></div>
+      <div id="today"></div>
+      <div class="spacer" style="flex:1"></div>
+      <div style="height:190px"></div>
+    </section>
+
+    <div id="topIcons">
+      <button id="btnSettings" class="icon" data-tip="settings" aria-label="الإعدادات">
+        <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.7 7.7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.7 1.7 1l.4 2.5h4l.4-2.5c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" fill="none" stroke="currentColor" stroke-width="1.6" transform="translate(-1 0)"/></svg>
+      </button>
+      <button id="btnReset" class="icon" data-tip="reset" aria-label="إعادة">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
+      </button>
+    </div>
+
+    <button id="tapBtn" data-tip="tap" aria-label="تسبيحة (اضغط مطولًا للتصفير)"></button>
+    <button id="micBtn" data-tip="mic" aria-label="العدّ بالصوت">
+      <span class="ring"></span>
+      <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.3-3a5.3 5.3 0 0 1-10.6 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11z"/></svg>
+    </button>
+    <div id="volRow" data-tip="volume">
+      <svg viewBox="0 0 24 24"><path d="M5 9v6h4l5 5V4L9 9z"/></svg>
+      <input type="range" id="vol" min="0" max="1" step="0.01" aria-label="مستوى الصوت">
+      <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+    </div>
+  </main>
+
+  <!-- الصفحات الأخرى تُبنى بالبرنامج -->
+  <section id="page" class="page hidden"></section>
+  <div id="dialog" class="dialog hidden"></div>
+  <div id="snackbar" class="hidden"><span id="snackText"></span><button id="snackAction"></button></div>
+  <div id="tips" class="hidden"></div>
+</div>
+
+<script src="js/voice.js"></script>
+<script src="js/strand.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
