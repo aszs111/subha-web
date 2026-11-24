@@ -36,7 +36,7 @@ svg { width: 24px; height: 24px; fill: currentColor; }
 }
 #dhikrBox { cursor: pointer; padding: 4px; touch-action: pan-y; }
 #dhikrText { font-weight: 500; color: var(--cream); line-height: 1.5; }
-#dhikrHint { color: rgba(247,239,218,.45); font-size: 19px; display: flex; align-items: center; justify-content: center; gap: 2px; letter-spacing: 1px; }
+#dhikrHint { color: rgba(247,239,218,.4); font-size: 17px; display: flex; align-items: center; justify-content: center; gap: 2px; letter-spacing: 1px; }
 #dhikrHint svg { width: 16px; height: 16px; }
 #count { font-size: 112px; line-height: 1.05; margin-top: 26px; transition: color .3s; }
 #count.pop { animation: pop .35s cubic-bezier(.3,1.6,.5,1); }

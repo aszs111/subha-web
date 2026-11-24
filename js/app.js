@@ -34,6 +34,7 @@ const S = (() => {
   }
   const defs = { sound: true, vibrate: true, keepOn: true, autoNext: true, sway: true, volume: 0.8, bg: 'black', voiceSens: 0.75, matchStrict: 0.5, tipsOff: false };
   for (const k in defs) if (st[k] === undefined) st[k] = defs[k];
+  for (const d of st.adhkar) if (d.fadl === undefined) d.fadl = fadlOf(d.text);
   if (!st.adhkar.some(d => d.id === st.current)) st.current = st.adhkar[0].id;
   return st;
 })();
@@ -190,18 +191,30 @@ $('#btnSettings').onclick = () => openSettings();
 $('#vol').oninput = e => { S.volume = +e.target.value; save(); };
 $('#vol').onchange = () => { if (S.sound) Sound.clack(); };
 
-// زر الذكر: ضغطة تفتح الأذكار، وسحب أفقي يتنقل بينها
+// الذكر: ضغطة مطولة = قائمة الأذكار، نقرتان = فضل الذكر، نقرة = تلميح، سحب أفقي = التنقل
 (() => {
   const box = $('#dhikrBox');
-  let x0 = null, y0 = 0, moved = false;
-  box.addEventListener('pointerdown', e => { x0 = e.clientX; y0 = e.clientY; moved = false; });
-  box.addEventListener('pointermove', e => { if (x0 !== null && Math.abs(e.clientX - x0) > 10) moved = true; });
+  let x0 = null, y0 = 0, moved = false, longT = null, long = false, lastTap = 0, tapT = null;
+  box.addEventListener('pointerdown', e => {
+    x0 = e.clientX; y0 = e.clientY; moved = false; long = false;
+    longT = setTimeout(() => { long = true; vib(30); openAdhkar(); }, 550);
+  });
+  box.addEventListener('pointermove', e => {
+    if (x0 !== null && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) { moved = true; clearTimeout(longT); }
+  });
   box.addEventListener('pointerup', e => {
+    clearTimeout(longT);
     if (x0 === null) return;
     const dx = e.clientX - x0; x0 = null;
-    if (moved && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(e.clientY - y0)) { browse(dx < 0 ? 1 : -1); render(true); }
-    else if (!moved) openAdhkar();
+    if (long) return;
+    if (moved) { if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(e.clientY - y0)) { browse(dx < 0 ? 1 : -1); render(true); } return; }
+    const now = Date.now();
+    if (now - lastTap < 320) { clearTimeout(tapT); lastTap = 0; fadlDialog(cur()); return; }
+    lastTap = now;
+    tapT = setTimeout(() => snack('اضغط مطولًا لقائمة الأذكار، وانقر نقرتين لفضل الذكر'), 330);
   });
+  box.addEventListener('pointercancel', () => { clearTimeout(longT); x0 = null; });
+  box.addEventListener('contextmenu', e => e.preventDefault());
 })();
 
 // زر النقر: ضغطة تُسقط خرزة، وضغطة مطولة تصفّر العداد
@@ -298,9 +311,25 @@ function openAdhkar(push = true) {
       <button class="icon" data-edit="${d.id}" aria-label="تعديل">${ICON.edit}</button></div>`;
   }).join('');
   showPage('adhkar', bar('الأذكار') + items + `<div style="height:90px"></div><button class="fab" id="addD">${ICON.add} إضافة ذكر</button>`, () => {
-    page.querySelectorAll('.card').forEach(c => c.onclick = e => {
-      if (e.target.closest('button')) return;
-      S.current = +c.dataset.id; save(); closeAllPages();
+    page.querySelectorAll('.card').forEach(c => {
+      let last = 0, t = null, lt = null, long = false;
+      const d = () => S.adhkar.find(x => x.id === +c.dataset.id);
+      c.addEventListener('pointerdown', e => {
+        if (e.target.closest('button')) return;
+        long = false; lt = setTimeout(() => { long = true; vib(30); dhikrDialog(d()); }, 550);
+      });
+      c.addEventListener('pointermove', () => {});
+      c.addEventListener('pointerleave', () => clearTimeout(lt));
+      c.addEventListener('pointercancel', () => clearTimeout(lt));
+      c.addEventListener('contextmenu', e => e.preventDefault());
+      c.addEventListener('pointerup', e => {
+        clearTimeout(lt);
+        if (e.target.closest('button') || long) return;
+        const now = Date.now();
+        if (now - last < 320) { clearTimeout(t); last = 0; fadlDialog(d()); return; }
+        last = now;
+        t = setTimeout(() => { S.current = +c.dataset.id; save(); closeAllPages(); }, 330);
+      });
     });
     page.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => dhikrDialog(S.adhkar.find(d => d.id === +b.dataset.edit)));
     page.querySelectorAll('[data-voice]').forEach(b => b.onclick = () => openEnroll(S.adhkar.find(d => d.id === +b.dataset.voice), () => refreshAdhkar()));
@@ -316,6 +345,8 @@ function dhikrDialog(d) {
   let target = d ? d.target : 100;
   openDialog(`<h2>${d ? 'تعديل الذكر' : 'ذكر جديد'}</h2>
     <textarea class="field" id="dt" placeholder="نص الذكر">${d ? esc(d.text) : ''}</textarea>
+    <div style="color:var(--gold);margin:12px 0 4px">فضل هذا الذكر (اختياري)</div>
+    <textarea class="field" id="df" style="min-height:110px" placeholder="مثل: حديث في فضله مع تخريجه">${d ? esc(d.fadl || '') : ''}</textarea>
     <div style="color:var(--gold);margin:12px 0 0">عدد المرات (الخطة)</div>
     <div id="dch" style="margin:0 -20px">${chips(target, 'data-n')}</div>
     <input class="field" id="dn" inputmode="numeric" placeholder="عدد مخصص (فارغ = بلا حد)" value="${target > 0 ? target : ''}">
@@ -330,9 +361,10 @@ function dhikrDialog(d) {
   dn.oninput = () => { target = +en(dn.value) || 0; setChips(); };
   $('#ok').onclick = () => {
     const text = $('#dt').value.trim(); if (!text) return;
-    if (d) { d.text = text; d.target = target; }
-    else S.adhkar.push({ id: Math.max(...S.adhkar.map(x => x.id)) + 1, text, target, count: 0, total: 0, bead: cur().bead, today: 0, day: 0 });
-    save(); closeDialog(); refreshAdhkar();
+    const fadl = $('#df').value.trim();
+    if (d) { d.text = text; d.target = target; d.fadl = fadl; }
+    else S.adhkar.push({ id: Math.max(...S.adhkar.map(x => x.id)) + 1, text, target, count: 0, total: 0, bead: cur().bead, today: 0, day: 0, fadl: fadl || fadlOf(text) });
+    save(); closeDialog(); refreshAdhkar(); if (!pageOpen()) render();
   };
   if (d) {
     const mv = k => { const i = S.adhkar.indexOf(d), j = i + k; if (j < 0 || j >= S.adhkar.length) return; S.adhkar.splice(i, 1); S.adhkar.splice(j, 0, d); save(); refreshAdhkar(); };
@@ -346,6 +378,16 @@ function dhikrDialog(d) {
       save(); closeDialog(); refreshAdhkar();
     };
   }
+}
+
+/* فضل الذكر */
+function fadlDialog(d) {
+  const has = (d.fadl || '').trim();
+  openDialog(`<h2 style="color:var(--gold);font-weight:700">فضل الذكر</h2>
+    <div style="text-align:center;font-size:26px;line-height:1.5;margin-bottom:10px">${esc(d.text)}</div>
+    <div style="border-top:1px solid rgba(217,185,91,.3);padding-top:12px;font-size:21px;line-height:1.75;white-space:pre-line;${has ? '' : 'color:rgba(247,239,218,.7)'}">${has ? esc(d.fadl) : 'لم يُكتب فضلٌ لهذا الذكر بعد. يمكنك إضافته من «تعديل».'}</div>
+    <div class="actions"><button class="textbtn" data-close>حسنًا</button><button class="textbtn" id="fEdit">${has ? 'تعديل' : 'إضافة فضل'}</button></div>`);
+  $('#fEdit').onclick = () => { closeDialog(); setTimeout(() => dhikrDialog(d), 50); };
 }
 
 /* شكل الخرز */
@@ -508,7 +550,7 @@ function openEnroll(d, onDone) {
 const TIPS = [
   ['strand', 'اسحب الخرزة', 'اسحب الخرزة السفلى من المجموعة العليا إلى الأسفل بإصبعك، فتسقط وتُحسب. كل سحبة تُسقط خرزة واحدة فقط، منعًا للخطأ في العدّ.'],
   ['strand', 'شكل الخرز', 'اضغط على الخرز ضغطة خفيفة دون سحب لتختار نوعه: زيتون، كهرمان، فيروز، يُسر وغيرها. ولكل ذكر خرزه الخاص.'],
-  ['dhikr', 'الأذكار', 'اضغط على الذكر لفتح قائمة الأذكار: تختار منها، وتضيف وتعدّل، وتحدد عدد كل ذكر. واسحب على الذكر يمينًا أو يسارًا للتنقل بين الأذكار.'],
+  ['dhikr', 'الأذكار وفضلها', 'اضغط على الذكر مطولًا لفتح قائمة الأذكار: تختار منها، وتضيف وتعدّل، وتحدد عدد كل ذكر.\nوانقر عليه نقرتين لترى فضله من السنة.\nواسحب عليه يمينًا أو يسارًا للتنقل بين الأذكار.'],
   ['count', 'العدد', 'هنا عدد ما سبّحت، وتحته العدد المطلوب. والمعيّنات الثلاث تمتلئ كلما أتممت ثلثه، وعند الإتمام ينتقل التطبيق إلى الذكر التالي.'],
   ['tap', 'زر النقر', 'اضغط هذا الزر لتُسقط خرزة إن لم ترد السحب.\nواضغط عليه مطولًا لتصفير العداد.'],
   ['mic', 'العدّ بالصوت', 'سجّل بصمة الذكر بصوتك ثلاث مرات، ثم اضغط هنا وقل الذكر: تسقط خرزة مع كل مرة يطابق فيها نطقك بصمتك، ولا يستجيب لغيره.'],
