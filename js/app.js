@@ -600,6 +600,8 @@ function showTips() {
   function next() { if (step < TIPS.length - 1) { step++; draw(); } else close(false); }
   box.onclick = () => next();
   draw();
+  const re = () => { if (!box.classList.contains('hidden') && box.innerHTML) draw(); };
+  window.addEventListener('resize', re);
 }
 
 /* ───────────── البدء ───────────── */
