@@ -169,7 +169,11 @@ function renderCount(pop) {
   const d = cur(), done = d.target > 0 && d.count >= d.target;
   const c = $('#count');
   c.textContent = ar(d.count);
-  c.style.fontSize = d.count < 1000 ? '112px' : '82px';
+  c.style.fontSize = d.count < 100 ? '96px' : d.count < 1000 ? '74px' : '56px';
+  // الحلقة: تمتلئ حتى الهدف، وبلا حد تمتلئ كل ٣٣
+  const goal = d.target > 0 ? Math.min(1, d.count / d.target) : (d.count === 0 ? 0 : ((d.count - 1) % 33 + 1) / 33);
+  const fg = $('#ringFg'); fg.style.strokeDashoffset = 282.74 * (1 - goal);
+  fg.style.opacity = goal > 0 ? 1 : 0;
   c.style.color = done ? 'var(--accent)' : 'var(--cream)';
   if (pop) { c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); }
   $('#of').textContent = d.target > 0 ? `من ${ar(d.target)}` : 'بلا حد';
