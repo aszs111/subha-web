@@ -130,9 +130,9 @@ function drawPreview(canvas, art, bg) {
 /** نوّاس مخمَّد للتأرجح (بالدرجات). */
 class Swing {
   constructor() { this.target = 0; this.angle = 0; this.vel = 0; }
-  kick() { this.vel += (Math.random() < 0.5 ? 1 : -1) * (5 + Math.random() * 3); }
-  step(dt) { const acc = -38 * (this.angle - this.target) - 3.2 * this.vel; this.vel += acc * dt; this.angle += this.vel * dt; }
-  settled() { return Math.abs(this.angle - this.target) < 0.01 && Math.abs(this.vel) < 0.02; }
+  kick() { this.vel += (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 1.5); }
+  step(dt) { const acc = -38 * (this.angle - this.target) - 7 * this.vel; this.vel += acc * dt; this.angle += this.vel * dt; }
+  settled() { return Math.abs(this.angle - this.target) < 0.02 && Math.abs(this.vel) < 0.05; }
 }
 
 /**
@@ -266,8 +266,11 @@ const Tilt = (() => {
     const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
     let deg = Math.atan2(a.x, a.y) * 180 / Math.PI;
     if (deg > 90) deg -= 180; else if (deg < -90) deg += 180;    // يوحّد إشارات iOS وأندرويد
-    smooth += (deg - smooth) * 0.15;
-    if (swing && on) swing.target = Math.max(-2.5, Math.min(2.5, smooth * 0.25));
+    // ترشيح قوي، ومنطقة ميتة ٤ درجات حتى لا يتحرك الخيط مع ارتعاش اليد
+    smooth += (deg - smooth) * 0.04;
+    const dz = Math.abs(smooth) < 4 ? 0 : smooth - 4 * Math.sign(smooth);
+    const t = Math.max(-1.2, Math.min(1.2, dz * 0.12));
+    if (swing && on && (Math.abs(t - swing.target) > 0.08 || t === 0)) swing.target = t;
   }
   return {
     attach(s) { swing = s; window.addEventListener('devicemotion', handler); },
