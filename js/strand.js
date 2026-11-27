@@ -167,7 +167,8 @@ class BeadStrand {
     const d = this.dpr;
     const beadW = Math.min(this.W * 0.56, 112 * d);
     this.g = new StrandGeom(this.art, this.W, this.H, beadW, this.H * 0.36, this.H * 0.64, 0.5 * d);
-    this.releaseT = Math.min(this.g.unitH(1) * 0.45, 52 * d);
+    // الخرزة تتبع الإصبع صعودًا ونزولًا في الفراغ، ولا تُحسب حتى تلامس المجموعة السفلى
+    this.gap = Math.max(1, this.g.botTop - this.g.topBase);
   }
   setArt(art) { this.art = art; this.geom(); this.dirty = true; }
   setCount(n) { if (n !== this.pos) { this.drops = []; this.drag = 0; this.pos = n; this.dirty = true; } }
@@ -184,7 +185,7 @@ class BeadStrand {
     const now = performance.now();
     const i = this.pos + 1;
     const top = this.g.topBase - this.pendingAt(0, now) - this.g.unitH(i) + this.drag;
-    const dur = Math.min(420, Math.max(140, Math.sqrt(Math.max(0.01, (this.g.botTop - top) / this.H)) * 520));
+    const dur = Math.min(420, Math.max(50, Math.sqrt(Math.max(0.01, (this.g.botTop - top) / this.H)) * 520));
     this.drops.push({ index: i, y0: top, t0: now, dur });
     this.drag = 0; this.dragAnim = null; this.pos = i;
     this.onDrop();
@@ -204,9 +205,9 @@ class BeadStrand {
       hist.push([e.timeStamp, e.clientY]); if (hist.length > 6) hist.shift();
       if (!dragging && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) { dragging = true; lastY = e.clientY; }
       if (dragging && !released && this.g) {
-        this.drag = Math.max(0, this.drag + (e.clientY - lastY) * this.dpr);
+        this.drag = Math.min(this.gap, Math.max(0, this.drag + (e.clientY - lastY) * this.dpr));
         this.dirty = true;
-        if (this.drag >= this.releaseT) { this.release(); released = true; }
+        if (this.drag >= this.gap - 1) { this.release(); released = true; }
       }
       lastY = e.clientY;
     });
@@ -217,7 +218,7 @@ class BeadStrand {
       if (!released && this.drag > 0) {
         const [t0, y0] = hist[0], [t1, y1] = hist[hist.length - 1];
         const v = t1 > t0 ? (y1 - y0) / (t1 - t0) * 1000 : 0; // px/s (CSS)
-        if (v > 700) this.release();
+        if (v > 700 || this.drag >= this.gap * 0.6) this.release();
         else this.dragAnim = { from: this.drag, t0: performance.now() };
       }
     };
@@ -242,9 +243,10 @@ class BeadStrand {
       }
     }
     if (this.dragAnim) {
-      const p = clamp01((t - this.dragAnim.t0) / 180);
-      this.drag = this.dragAnim.from * (1 - p);
-      if (p >= 1) this.dragAnim = null;
+      // رجوع نابضي خفيف إلى المكان
+      const u = (t - this.dragAnim.t0) / 1000;
+      this.drag = this.dragAnim.from * Math.exp(-9 * u) * Math.cos(14 * u);
+      if (u > 0.6) { this.drag = 0; this.dragAnim = null; }
     }
     // ارتداد (نابض)
     if (Math.abs(this.jolt) > 0.05 || Math.abs(this.joltV) > 0.05) {
