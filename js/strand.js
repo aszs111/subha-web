@@ -84,7 +84,9 @@ function drawStrand(ctx, g, pos, falling, pendingAt, drag, bg, jolt = 0, tilt = 
   // أقصى ميل يُبقي أبعد خرزة كاملة داخل عمود الخرز (لا تدخل في الجانب الأيسر ولا تُقص)
   const margin = Math.max(0, g.cx - g.art.beads[0].naturalWidth * g.s / 2 - 3 * dp);
   const maxA = Math.atan(margin / (H * 1.25)) * 180 / Math.PI;
-  const shown = maxA <= 0.01 ? 0 : maxA * Math.tanh(tilt / maxA);
+  // الحركة كما هي تمامًا، ولا تُليَّن إلا في آخر ١٥٪ قبل حافة العمود
+  const knee = 0.85 * maxA, at = Math.abs(tilt);
+  const shown = maxA <= 0.01 ? 0 : at <= knee ? tilt : Math.sign(tilt) * (knee + (maxA - knee) * Math.tanh((at - knee) / (maxA - knee)));
   ctx.translate(g.cx, -H * 0.25); ctx.rotate(shown * Math.PI / 180); ctx.translate(-g.cx, H * 0.25);
   drawRope(ctx, g, g.art.style.thread, dp, W, H);
   // السفلى
