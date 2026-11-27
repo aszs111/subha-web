@@ -81,7 +81,11 @@ function drawStrand(ctx, g, pos, falling, pendingAt, drag, bg, jolt = 0, tilt = 
   const W = g.w, H = g.h;
   ctx.save();
   // الخيط معلّق من نقطة فوق الشاشة
-  ctx.translate(g.cx, -H * 0.25); ctx.rotate(tilt * Math.PI / 180); ctx.translate(-g.cx, H * 0.25);
+  // أقصى ميل يُبقي أبعد خرزة كاملة داخل عمود الخرز (لا تدخل في الجانب الأيسر ولا تُقص)
+  const margin = Math.max(0, g.cx - g.art.beads[0].naturalWidth * g.s / 2 - 3 * dp);
+  const maxA = Math.atan(margin / (H * 1.25)) * 180 / Math.PI;
+  const shown = maxA <= 0.01 ? 0 : maxA * Math.tanh(tilt / maxA);
+  ctx.translate(g.cx, -H * 0.25); ctx.rotate(shown * Math.PI / 180); ctx.translate(-g.cx, H * 0.25);
   drawRope(ctx, g, g.art.style.thread, dp, W, H);
   // السفلى
   const base = pos - falling.length;
@@ -159,7 +163,7 @@ class BeadStrand {
   geom() {
     if (!this.art) return;
     const d = this.dpr;
-    const beadW = Math.min(this.W * 0.62, 118 * d);
+    const beadW = Math.min(this.W * 0.56, 112 * d);
     this.g = new StrandGeom(this.art, this.W, this.H, beadW, this.H * 0.36, this.H * 0.64, 0.5 * d);
     this.releaseT = Math.min(this.g.unitH(1) * 0.45, 52 * d);
   }

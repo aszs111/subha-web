@@ -1,5 +1,5 @@
 // يعمل التطبيق دون إنترنت بعد أول فتح
-const VERSION = 'subha-v5';
+const VERSION = 'subha-v6';
 const FILES = [
  "./",
  "index.html",
