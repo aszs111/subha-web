@@ -134,8 +134,8 @@ function drawPreview(canvas, art, bg) {
 /** نوّاس مخمَّد للتأرجح (بالدرجات). */
 class Swing {
   constructor() { this.target = 0; this.angle = 0; this.vel = 0; }
-  kick() { this.vel += (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 1.5); }
-  step(dt) { const acc = -38 * (this.angle - this.target) - 7 * this.vel; this.vel += acc * dt; this.angle += this.vel * dt; }
+  kick() { this.vel += (Math.random() < 0.5 ? 1 : -1) * (7 + Math.random() * 3); }
+  step(dt) { const acc = -95 * (this.angle - this.target) - 4.2 * this.vel; this.vel += acc * dt; this.angle += this.vel * dt; }
   settled() { return Math.abs(this.angle - this.target) < 0.02 && Math.abs(this.vel) < 0.05; }
 }
 
@@ -271,9 +271,9 @@ const Tilt = (() => {
     let deg = Math.atan2(a.x, a.y) * 180 / Math.PI;
     if (deg > 90) deg -= 180; else if (deg < -90) deg += 180;    // يوحّد إشارات iOS وأندرويد
     // ترشيح قوي، ومنطقة ميتة ٤ درجات حتى لا يتحرك الخيط مع ارتعاش اليد
-    smooth += (deg - smooth) * 0.04;
-    const dz = Math.abs(smooth) < 4 ? 0 : smooth - 4 * Math.sign(smooth);
-    const t = Math.max(-1.2, Math.min(1.2, dz * 0.12));
+    smooth += (deg - smooth) * 0.12;
+    const dz = Math.abs(smooth) < 2.5 ? 0 : smooth - 2.5 * Math.sign(smooth);
+    const t = Math.max(-2, Math.min(2, dz * 0.3));
     if (swing && on && (Math.abs(t - swing.target) > 0.08 || t === 0)) swing.target = t;
   }
   return {
